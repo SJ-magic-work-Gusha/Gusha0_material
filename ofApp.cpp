@@ -11,6 +11,7 @@
 ofApp::ofApp(int _CamId_0, int _CamId_1)
 : b_DispGUI(true)
 , VisualizedSourceCode(NULL)
+, AlphaBase_StrobeImage(1.0)
 {
 	VisualizedSourceCode = new SOURCE_CODE;
 	
@@ -155,6 +156,8 @@ void ofApp::update(){
 		VideoCam[i]->update();
 	}
 	
+	AlphaBase_StrobeImage.update(now, Gui_Global->b_SendStrobeImage);
+	
 	/********************
 	********************/
 	if(VisualizedSourceCode) VisualizedSourceCode->update(now);
@@ -214,7 +217,8 @@ void ofApp::publish_syphon()
 	
 	/********************
 	********************/
-	if(Gui_Global->b_SendStrobeImage){
+	// if(Gui_Global->b_SendStrobeImage){
+	if(AlphaBase_StrobeImage.Is_StrobeOn()){
 		ofTexture tex = fbo_StrobeImage.getTextureReference();
 		SyphonServer_StrobeImage.publishTexture(&tex);
 	}else{
@@ -284,7 +288,8 @@ void ofApp::draw_fbo_StrobeImage()
 		shader_GrayBoostStrobe.begin();
 			shader_GrayBoostStrobe.setUniform1f( "Boost", Gui_Global->BoostBrightness_for_Strobe);
 			
-			if(Gui_Global->b_SendStrobeImage){
+			// if(Gui_Global->b_SendStrobeImage){
+			if(AlphaBase_StrobeImage.Is_StrobeOn()){
 				/*
 				const float max = 1.0;
 				const float min = 0.2;
@@ -304,7 +309,7 @@ void ofApp::draw_fbo_StrobeImage()
 				if(dt < Gui_Global->d_Strobe_sec/2)	alpha = max;
 				else								alpha = min;
 				
-				shader_GrayBoostStrobe.setUniform1f( "alpha", alpha);
+				shader_GrayBoostStrobe.setUniform1f( "alpha", alpha * AlphaBase_StrobeImage.get_Alpga());
 				
 			}else{
 				shader_GrayBoostStrobe.setUniform1f( "alpha", 1);

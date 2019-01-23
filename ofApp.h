@@ -17,6 +17,71 @@ note
 
 /**************************************************
 **************************************************/
+class ALPHA_BASE__STROBEIMAGE{
+private:
+	enum STATE{
+		STATE__OFF,
+		STATE__STROBE,
+		STATE__FADEOUT,
+	};
+	
+	STATE State;
+	float t_from;
+	float d_Fade;
+	
+	double alpha;
+	
+public:
+	ALPHA_BASE__STROBEIMAGE(double _d_Fade)
+	: t_from(0), d_Fade(_d_Fade), alpha(1), State(STATE__OFF)
+	{
+		if(d_Fade <= 0) d_Fade = 1.0;
+	}
+	
+	void update(float now, bool b_SendStrobe)
+	{
+		switch(State){
+			case STATE__OFF:
+				if(b_SendStrobe){
+					State = STATE__STROBE;
+					alpha = 1.0;
+				}
+				break;
+				
+			case STATE__STROBE:
+				if(!b_SendStrobe){
+					State = STATE__FADEOUT;
+					t_from = now;
+				}
+				break;
+				
+			case STATE__FADEOUT:
+				if(b_SendStrobe){
+					State = STATE__STROBE;
+					alpha = 1.0;
+				}else{
+					alpha = 1.0 - 1/d_Fade * (now - t_from);
+					if(1 < alpha) alpha = 1.0; // ないはずだけど、一応
+					
+					if(alpha <= 0){
+						State = STATE__OFF;
+						alpha = 1.0;
+					}
+				}
+				break;
+		}
+	}
+	
+	double get_Alpga() { return alpha; }
+	
+	bool Is_StrobeOn(){
+		if( (State == STATE__STROBE) || (State == STATE__FADEOUT) )	return true;
+		else														return false;
+	}
+};
+
+/**************************************************
+**************************************************/
 class ofApp : public ofBaseApp{
 private:
 	/****************************************
@@ -41,6 +106,7 @@ private:
 	ofFbo fbo_StrobeImage;
 	ofShader shader_GrayBoostStrobe;
 	ofxSyphonServer SyphonServer_StrobeImage;
+	ALPHA_BASE__STROBEIMAGE AlphaBase_StrobeImage;
 	
 	/****************************************
 	****************************************/
